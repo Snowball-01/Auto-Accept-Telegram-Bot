@@ -45,9 +45,10 @@ async def set_welcome_msg(bot: Client, message: Message):
     if welcome_msg:
         SnowDev = await message.reply_text("**Please Wait...**", reply_to_message_id=message.id)
         try:
-            if welcome_msg.photo or welcome_msg.video or welcome_msg.animation:
+            if welcome_msg.photo or welcome_msg.video or welcome_msg.animation or welcome_msg.audio:
+                
                 await db.set_welcome(message.from_user.id, welcome_msg.caption)
-                await db.set_welc_file(message.from_user.id, welcome_msg.photo.file_id if welcome_msg.photo else welcome_msg.video.file_id if welcome_msg.video else welcome_msg.animation.file_id)
+                await db.set_welc_file(message.from_user.id, welcome_msg.photo.file_id if welcome_msg.photo else welcome_msg.video.file_id if welcome_msg.video else welcome_msg.animation.file_id if welcome_msg.animation else welcome_msg.audio.file_id)
             else:
                 await db.set_welcome(message.from_user.id, welcome_msg.text)
                 await db.set_welc_file(message.from_user.id, None)
@@ -64,9 +65,9 @@ async def set_leave_msg(bot: Client, message: Message):
     if leave_msg:
         SnowDev = await message.reply_text("**Please Wait...**", reply_to_message_id=message.id)
         try:
-            if leave_msg.photo or leave_msg.video or leave_msg.animation:
+            if leave_msg.photo or leave_msg.video or leave_msg.animation or leave_msg.audio:
                 await db.set_leave(message.from_user.id, leave_msg.caption)
-                await db.set_leav_file(message.from_user.id, leave_msg.photo.file_id if leave_msg.photo else leave_msg.video.file_id if leave_msg.video else leave_msg.animation.file_id)
+                await db.set_leav_file(message.from_user.id, leave_msg.photo.file_id if leave_msg.photo else leave_msg.video.file_id if leave_msg.video else leave_msg.animation.file_id if leave_msg.animation else leave_msg.audio.file_id)
             else:
                 await db.set_leave(message.from_user.id, leave_msg.text)
                 await db.set_leav_file(message.from_user.id, None)
