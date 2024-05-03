@@ -19,14 +19,15 @@ async def handle_start(bot: Client, message: Message):
     text = f"Hi, {message.from_user.mention}\n\n I'm Auto Accept Bot I can accpet user from any channel and group just make me admin there."
     reply_markup = InlineKeyboardMarkup(
         [
-            [InlineKeyboardButton(text="ᴅᴇᴠᴇʟᴏᴘᴇʀ 👨‍💻", url="https://t.me/Snowball_Official")],
+            [InlineKeyboardButton(text="ᴅᴇᴠᴇʟᴏᴘᴇʀ 👨‍💻",
+                                  url="https://t.me/Snowball_Official")],
             [InlineKeyboardButton("ʜᴇʟᴘ ❗", callback_data="help")],
         ]
     )
     await SnowDev.delete()
     if Config.START_PIC:
         if message.from_user.id == Config.ADMIN:
-            
+
             await message.reply_photo(photo=Config.START_PIC, caption=text, reply_markup=reply_markup)
         else:
 
@@ -74,26 +75,30 @@ async def set_leave_msg(bot: Client, message: Message):
         await SnowDev.edit("Successfully Set Your Leave Message ✅")
     else:
         await message.reply_text("Invalid Command !\n⚠️ Format ➜ `Hey, {user} By See You Again from {title}` \n\n **Reply to message**")
-        
-        
+
+
 @Client.on_message(filters.private & filters.command('auto_approves') & filters.user(Config.ADMIN))
-async def handle_auto_approves(bot: Client, message:Message):
-    
+async def handle_auto_approves(bot: Client, message: Message):
+
     SnowDev = await message.reply_text('**Please Wait...**', reply_to_message_id=message.id)
 
     btns = []
 
     db_channels = await db.get_admin_channels()
+
+    if not db_channels:
+        return await SnowDev.edit("**⚠️ I'm not admin in any channels yet**")
     try:
         for key, value in db_channels.items():
             chnl = await bot.get_chat(key)
             if value:
-                
-                btns.append([InlineKeyboardButton(f'{chnl.title} ✅', callback_data=f'autoapprove_{key}')])
+
+                btns.append([InlineKeyboardButton(
+                    f'{chnl.title} ✅', callback_data=f'autoapprove_{key}')])
             else:
-                btns.append([InlineKeyboardButton(f'{chnl.title} ❌', callback_data=f'autoapprove_{key}')])
-        
-    
+                btns.append([InlineKeyboardButton(
+                    f'{chnl.title} ❌', callback_data=f'autoapprove_{key}')])
+
         await SnowDev.edit("**Here are the channels where I'm admin and you can toggle the auto accept functionality.**", reply_markup=InlineKeyboardMarkup(btns))
     except Exception as e:
         print(e)
@@ -131,11 +136,10 @@ async def set_bool_welc(bot: Client, message: Message):
 async def handle_CallbackQuery(bot: Client, query: CallbackQuery):
 
     data = query.data
-    
-    
+
     if data.startswith('autoapprove_'):
         id = data.split('_')[1]
-        
+
         text = "**Here are the channels where I'm admin and you can toggle the auto accept functionality.**"
 
         db_channels = await db.get_admin_channels()
@@ -143,25 +147,28 @@ async def handle_CallbackQuery(bot: Client, query: CallbackQuery):
         try:
             for key, value in db_channels.items():
                 channel = await bot.get_chat(key)
-                
+
                 if key == id:
                     if value:
                         await db.update_admin_channel(id, False)
-                        btn.append([InlineKeyboardButton(f'{channel.title} ❌', callback_data=f'autoapprove_{key}')])
+                        btn.append([InlineKeyboardButton(
+                            f'{channel.title} ❌', callback_data=f'autoapprove_{key}')])
                     else:
                         await db.update_admin_channel(id, True)
-                        btn.append([InlineKeyboardButton(f'{channel.title} ✅', callback_data=f'autoapprove_{key}')])
-                
+                        btn.append([InlineKeyboardButton(
+                            f'{channel.title} ✅', callback_data=f'autoapprove_{key}')])
+
                 else:
                     if value:
-                        btn.append([InlineKeyboardButton(f'{channel.title} ✅', callback_data=f'autoapprove_{key}')])
+                        btn.append([InlineKeyboardButton(
+                            f'{channel.title} ✅', callback_data=f'autoapprove_{key}')])
                     else:
-                        btn.append([InlineKeyboardButton(f'{channel.title} ❌', callback_data=f'autoapprove_{key}')])
-            
-            await query.message.edit(text=text, reply_markup=InlineKeyboardMarkup(btn))        
+                        btn.append([InlineKeyboardButton(
+                            f'{channel.title} ❌', callback_data=f'autoapprove_{key}')])
+
+            await query.message.edit(text=text, reply_markup=InlineKeyboardMarkup(btn))
         except Exception as e:
             return query.message.edit("**I'm Not admin in any channel or group yet**\n\nOR Maybe you make me admin in any channels or group when i was offline so make sure to remove me and make me admin again !")
-                    
 
     elif data.startswith('welc'):
         text = "Click the button from below to toggle Welcome & Leaving Message also Auto Accept."
