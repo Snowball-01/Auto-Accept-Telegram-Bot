@@ -13,7 +13,7 @@ class Config(object):
 
     # database config
     DB_URL = os.environ.get("DB_URL", "")  # ⚠️ Required
-    DB_NAME = os.environ.get("DB_NAME", "AutoAcceptBot")
+    DB_NAME = os.environ.get("DB_NAME", "NewRepo")
 
     # other configs
     BOT_UPTIME = time.time()
