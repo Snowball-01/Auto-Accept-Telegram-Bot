@@ -26,14 +26,14 @@ async def handle_start(bot: Client, message: Message):
     )
     await SnowDev.delete()
     if Config.START_PIC:
-        if message.from_user.id in Config.ADMIN:
+        if message.from_user.id == Config.ADMIN:
 
             await message.reply_photo(photo=Config.START_PIC, caption=text, reply_markup=reply_markup)
         else:
 
             await message.reply_photo(photo=Config.START_PIC, caption=text, reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton(text="ᴅᴇᴠᴇʟᴏᴘᴇʀ 👨‍💻", url="https://t.me/Snowball_Official")]]))
     else:
-        if message.from_user.id in Config.ADMIN:
+        if message.from_user.id == Config.ADMIN:
             await SnowDev.edit(text=text, reply_markup=reply_markup)
         else:
             await SnowDev.edit(text=text, reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton(text="ᴅᴇᴠᴇʟᴏᴘᴇʀ 👨‍💻", url="https://t.me/Snowball_Official")]]))
