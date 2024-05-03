@@ -91,7 +91,7 @@ async def handle_auto_approves(bot: Client, message: Message):
         return await SnowDev.edit("**⚠️ I'm not admin in any channels yet**")
     try:
         for key, value in db_channels.items():
-            chnl = await bot.get_chat(key)
+            chnl = await bot.get_chat(int(key))
             if value:
 
                 btns.append([InlineKeyboardButton(
