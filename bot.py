@@ -42,11 +42,12 @@ class Bot(Client):
         await web.TCPSite(app, bind_address, Config.PORT).start()
         logging.info(f"{me.first_name} ✅✅ BOT started successfully ✅✅")
 
-        if Config.ADMIN:
+        for id in Config.ADMIN:
             try:
-                await self.send_message(Config.ADMIN, f"**__{me.first_name}  Iꜱ Sᴛᴀʀᴛᴇᴅ.....✨️__**")
+                await self.send_message(id, f"**__{me.first_name}  Iꜱ Sᴛᴀʀᴛᴇᴅ.....✨️__**")
             except:
                 pass
+
 
     async def stop(self, *args):
         await super().stop()
@@ -54,7 +55,6 @@ class Bot(Client):
 
 
 bot_instance = Bot()
-
 
 def main():
     async def start_services():
@@ -67,11 +67,10 @@ def main():
             await asyncio.gather(
                 bot_instance.start()
             )
-
+        
     loop = asyncio.get_event_loop()
     loop.run_until_complete(start_services())
     loop.run_forever()
-
 
 if __name__ == "__main__":
     warnings.filterwarnings("ignore", message="There is no current event loop")
