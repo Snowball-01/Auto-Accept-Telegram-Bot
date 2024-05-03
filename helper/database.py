@@ -137,7 +137,7 @@ class Database:
     async def add_user(self, b, m):
         u = m.from_user
         if not await self.is_user_exist(u.id):
-            if u.id in Config.ADMIN:
+            if u.id == Config.ADMIN:
                 user = self.admin_user(u.id)
             else:
                 user = self.new_user(u.id)
