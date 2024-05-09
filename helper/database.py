@@ -10,6 +10,7 @@ class Database:
         self._client = motor.motor_asyncio.AsyncIOMotorClient(uri)
         self.db = self._client[database_name]
         self.col = self.db.users
+        self.bot = self.db.bots
 
     def admin_user(self, id):
         return dict(
@@ -24,6 +25,7 @@ class Database:
             bool_leav=None,
             channel=[],
             admin_channels={},
+
         )
 
     def new_user(self, id):
@@ -36,6 +38,21 @@ class Database:
         return dict(
             id=int(id)
         )
+
+    async def add_bot(self, bot_datas):
+        if not await self.is_user_bot_exist(bot_datas['user_id']):
+            await self.bot.insert_one(bot_datas)
+
+    async def get_user_bot(self, user_id: int):
+        user = await self.bot.find_one({'user_id': user_id, 'is_bot': False})
+        return user if user else None
+
+    async def is_user_bot_exist(self, user_id):
+        user = await self.bot.find_one({'user_id': user_id, 'is_bot': False})
+        return bool(user)
+
+    async def remove_user(self, user_id):
+        await self.bot.delete_many({'user_id': int(user_id), 'is_bot': False})
 
     async def set_welcome(self, user_id, welcome):
         await self.col.update_one({'id': int(user_id)}, {'$set': {'welcome': welcome}})
