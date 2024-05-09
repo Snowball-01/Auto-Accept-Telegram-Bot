@@ -127,10 +127,10 @@ async def handle_accept_pending_request(bot: Client, update: CallbackQuery):
     try:
         bot_exist = await db.is_user_bot_exist(update.from_user.id)
     except:
-        return await update.message.reply_text('**⚠️ You have not added user bot yet !\n\nUse /add_userbot to add it **', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('User Bot', callback_data='userbot')]]))
+        return await update.message.edit('**⚠️ You have not added user bot yet !\n\nUse /add_userbot to add it **', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('User Bot', callback_data='userbot')]]))
 
     if not bot_exist:
-        return await update.message.reply_text('**⚠️ You have not added user bot yet !\n\nUse /add_userbot to add it **', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('User Bot', callback_data='userbot')]]))
+        return await update.message.edit('**⚠️ You have not added user bot yet !\n\nUse /add_userbot to add it **', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('User Bot', callback_data='userbot')]]))
 
     user_bot = await db.get_user_bot(update.from_user.id)
     user = await start_clone_bot(client(user_bot['session']))
@@ -158,10 +158,10 @@ async def handle_delcine_pending_request(bot: Client, update: CallbackQuery):
     try:
         bot_exist = await db.is_user_bot_exist(update.from_user.id)
     except:
-        return await update.message.reply_text('**⚠️ You have not added user bot yet !\n\nUse /add_userbot to add it **', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('User Bot', callback_data='userbot')]]))
+        return await update.message.edit('**⚠️ You have not added user bot yet !\n\nUse /add_userbot to add it **', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('User Bot', callback_data='userbot')]]))
 
     if not bot_exist:
-        return await update.message.reply_text('**⚠️ You have not added user bot yet !\n\nUse /add_userbot to add it **', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('User Bot', callback_data='userbot')]]))
+        return await update.message.edit('**⚠️ You have not added user bot yet !\n\nUse /add_userbot to add it **', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('User Bot', callback_data='userbot')]]))
 
     ms = await update.message.edit("**Please Wait Declining all the peding requests. ♻️**")
 
