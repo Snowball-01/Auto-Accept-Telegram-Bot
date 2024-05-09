@@ -45,6 +45,7 @@ class TxT(object):
 ➜ /broadcast - To brodcast the users (only those user who has started your bot)
 ➜ /acceptall - To accept all the pending join requests
 ➜ /declineall - To decline all the pending join requests
+➜ /add_userbot - To add user bot for to accept or reject pending join requests
 
 ⚠️ <b> Support HTML & Markdown formating in welcome or leave message for more info <a href=https://core.telegram.org/api/entities#:~:text=%2C%20MadelineProto.-,Allowed%20entities,-For%20example%20the> Link </a>. </b>
 
