@@ -18,7 +18,6 @@ logger.setLevel(logging.INFO)
 # approve all pending request is only for user for more info https://docs.pyrogram.org/api/methods/approve_all_chat_join_requests#pyrogram.Client.approve_all_chat_join_requests:~:text=Approve%20all%20pending%20join%20requests%20in%20a%20chat. only Usable by User not bot
 
 
-
 @Client.on_message(filters.command(["stats", "status"]) & filters.user(Config.ADMIN))
 async def get_stats(bot, message):
     total_users = await db.total_users_count()
@@ -125,14 +124,17 @@ async def handle_declineall(bot: Client, message: Message):
 async def handle_accept_pending_request(bot: Client, update: CallbackQuery):
     # await update.message.delete()
     chat_id = update.data.split('_')[1]
-    bot_exist = await db.is_user_bot_exist(update.from_user.id)
+    try:
+        bot_exist = await db.is_user_bot_exist(update.from_user.id)
+    except:
+        return await update.message.reply_text('**⚠️ You have not added user bot yet !\n\nUse /add_userbot to add it **', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('User Bot', callback_data='userbot')]]))
 
     if not bot_exist:
-        return await update.message.reply_text('**⚠️ User Bot Already Exists**', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('User Bot', callback_data='userbot')]]))
-    
+        return await update.message.reply_text('**⚠️ You have not added user bot yet !\n\nUse /add_userbot to add it **', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('User Bot', callback_data='userbot')]]))
+
     user_bot = await db.get_user_bot(update.from_user.id)
     user = await start_clone_bot(client(user_bot['session']))
-    
+
     ms = await update.message.edit("**Please Wait Accepting the peding requests. ♻️**")
     try:
         while True:
@@ -144,21 +146,25 @@ async def handle_accept_pending_request(bot: Client, update: CallbackQuery):
             except Exception as e:
                 print('Error on line {}'.format(
                     sys.exc_info()[-1].tb_lineno), type(e).__name__, e)
-                pass
+                await update.message.reply_text(f"**Task Completed** ✓ **Approved ✅ All Pending Join Request**")
+                break
     except:
         await update.message.reply_text(f"**Task Completed** ✓ **Approved ✅ All Pending Join Request**")
-        await ms.delete()
+    await ms.delete()
 
 
 @Client.on_callback_query(filters.regex('^declineallchat_'))
 async def handle_delcine_pending_request(bot: Client, update: CallbackQuery):
-    bot_exist = await db.is_user_bot_exist(update.from_user.id)
+    try:
+        bot_exist = await db.is_user_bot_exist(update.from_user.id)
+    except:
+        return await update.message.reply_text('**⚠️ You have not added user bot yet !\n\nUse /add_userbot to add it **', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('User Bot', callback_data='userbot')]]))
 
     if not bot_exist:
-        return await update.message.reply_text('**⚠️ User Bot Already Exists**', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('User Bot', callback_data='userbot')]]))
+        return await update.message.reply_text('**⚠️ You have not added user bot yet !\n\nUse /add_userbot to add it **', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('User Bot', callback_data='userbot')]]))
 
     ms = await update.message.edit("**Please Wait Declining all the peding requests. ♻️**")
-    
+
     chat_id = update.data.split('_')[1]
     user_bot = await db.get_user_bot(update.from_user.id)
     user = await start_clone_bot(client(user_bot['session']))
