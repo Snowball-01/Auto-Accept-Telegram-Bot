@@ -102,4 +102,3 @@ async def handle_chat(bot: Client, update: ChatMemberUpdated):
                 # Remove the channel from the bot's list
                 await db.remove_channel(Config.ADMIN, chat_id)
                 await db.remove_admin_channel(f'{chat_id}')
-            
