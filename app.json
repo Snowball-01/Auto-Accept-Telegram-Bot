@@ -22,12 +22,6 @@
             "required": true
         },
 
-        "SESSION": {
-            "description": "Your User Account Session String to use /acceptall or /declineall command. Generate String Session by @SnowStringGenBot",
-            "value": "",
-            "required": true
-        },
-
         "ADMIN": {
             "description":"Add Your User ID multiple is use space to split",
             "value": "",
