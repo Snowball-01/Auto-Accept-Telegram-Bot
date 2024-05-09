@@ -1,3 +1,4 @@
+import sys
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message, CallbackQuery
 from helper.database import db
@@ -10,6 +11,17 @@ from helper.utils import (
     OnAutoacceptBtn,
     OffAutoacceptBtn,
 )
+
+SESSION_STRING_SIZE = 351
+
+
+async def start_clone_bot(FwdBot, data=None):
+    await FwdBot.start()
+    return FwdBot
+
+
+def client(data):
+    return Client("USERBOT", Config.API_ID, Config.API_HASH, session_string=data)
 
 
 @Client.on_message(filters.private & filters.command("start"))
@@ -46,7 +58,7 @@ async def set_welcome_msg(bot: Client, message: Message):
         SnowDev = await message.reply_text("**Please Wait...**", reply_to_message_id=message.id)
         try:
             if welcome_msg.photo or welcome_msg.video or welcome_msg.animation or welcome_msg.audio:
-                
+
                 await db.set_welcome(message.from_user.id, welcome_msg.caption)
                 await db.set_welc_file(message.from_user.id, welcome_msg.photo.file_id if welcome_msg.photo else welcome_msg.video.file_id if welcome_msg.video else welcome_msg.animation.file_id if welcome_msg.animation else welcome_msg.audio.file_id)
             else:
@@ -133,151 +145,40 @@ async def set_bool_welc(bot: Client, message: Message):
     await SnowDev.edit(text=text, reply_markup=reply_markup)
 
 
-@Client.on_callback_query()
-async def handle_CallbackQuery(bot: Client, query: CallbackQuery):
+@Client.on_message(filters.private & filters.command('add_userbot') & filters.user(Config.ADMIN))
+async def add_userbot(bot: Client, message: Message):
+    bot_exist = await db.is_user_bot_exist(message.from_user.id)
 
-    data = query.data
+    if bot_exist:
+        return await message.reply_text('**⚠️ User Bot Already Exists**', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('User Bot', callback_data='userbot')]]))
 
-    if data.startswith('autoapprove_'):
-        id = data.split('_')[1]
+    user_id = int(message.from_user.id)
 
-        text = "**Here are the channels where I'm admin and you can toggle the auto accept functionality.**"
+    text = "<b>⚠️ DISCLAIMER ⚠️</b>\n\n<code>you can use your session for forward message from private chat to another chat.\nPlease add your pyrogram session with your own risk. Their is a chance to ban your account. My developer is not responsible if your account may get banned.</code>"
+    await bot.send_message(user_id, text=text)
+    msg = await bot.ask(chat_id=user_id, text="<b>send your pyrogram session.\nget it from @SnowStringGenBot - /cancel the process</b>")
+    if msg.text == '/cancel':
+        return await msg.reply('<b>process cancelled !</b>')
+    elif len(msg.text) < SESSION_STRING_SIZE:
+        return await msg.reply('<b>invalid session sring</b>')
+    try:
+        user_account = await start_clone_bot(client(msg.text))
+    except Exception as e:
+        await msg.reply_text(f"<b>USER BOT ERROR:</b> `{e}`")
+        print('Error on line {}'.format(
+            sys.exc_info()[-1].tb_lineno), type(e).__name__, e)
 
-        db_channels = await db.get_admin_channels()
-        btn = []
-        try:
-            for key, value in db_channels.items():
-                channel = await bot.get_chat(key)
+    user = user_account.me
 
-                if key == id:
-                    if value:
-                        await db.update_admin_channel(id, False)
-                        btn.append([InlineKeyboardButton(
-                            f'{channel.title} ❌', callback_data=f'autoapprove_{key}')])
-                    else:
-                        await db.update_admin_channel(id, True)
-                        btn.append([InlineKeyboardButton(
-                            f'{channel.title} ✅', callback_data=f'autoapprove_{key}')])
+    details = {
+        'id': user.id,
+        'is_bot': False,
+        'user_id': user_id,
+        'name': user.first_name,
+        'session': msg.text,
+        'username': user.username
+    }
 
-                else:
-                    if value:
-                        btn.append([InlineKeyboardButton(
-                            f'{channel.title} ✅', callback_data=f'autoapprove_{key}')])
-                    else:
-                        btn.append([InlineKeyboardButton(
-                            f'{channel.title} ❌', callback_data=f'autoapprove_{key}')])
+    await db.add_bot(details)
 
-            await query.message.edit(text=text, reply_markup=InlineKeyboardMarkup(btn))
-        except Exception as e:
-            return query.message.edit("**I'm Not admin in any channel or group yet**\n\nOR Maybe you make me admin in any channels or group when i was offline so make sure to remove me and make me admin again !")
-
-    elif data.startswith('welc'):
-        text = "Click the button from below to toggle Welcome & Leaving Message also Auto Accept."
-        boolean = data.split('-')[1]
-
-        if boolean == 'on':
-            await db.set_bool_welc(query.from_user.id, False)
-            if await db.get_bool_leav(query.from_user.id):
-                if await db.get_bool_auto_accept(query.from_user.id):
-                    return await query.message.edit(text=text, reply_markup=InlineKeyboardMarkup([[OffWelcBtn, OnLeavBtn], [OnAutoacceptBtn]]))
-                return await query.message.edit(text=text, reply_markup=InlineKeyboardMarkup([[OffWelcBtn, OnLeavBtn], [OffAutoacceptBtn]]))
-
-            else:
-                if await db.get_bool_auto_accept(query.from_user.id):
-
-                    return await query.message.edit(text=text, reply_markup=InlineKeyboardMarkup([[OffWelcBtn, OffLeavBtn], [OnAutoacceptBtn]]))
-                return await query.message.edit(text=text, reply_markup=InlineKeyboardMarkup([[OffWelcBtn, OffLeavBtn], [OffAutoacceptBtn]]))
-
-        elif boolean == 'off':
-            await db.set_bool_welc(query.from_user.id, True)
-            if await db.get_bool_leav(query.from_user.id):
-                if await db.get_bool_auto_accept(query.from_user.id):
-
-                    return await query.message.edit(text=text, reply_markup=InlineKeyboardMarkup([[OnWelcBtn, OnLeavBtn], [OnAutoacceptBtn]]))
-                return await query.message.edit(text=text, reply_markup=InlineKeyboardMarkup([[OnWelcBtn, OnLeavBtn], [OffAutoacceptBtn]]))
-
-            else:
-                if await db.get_bool_auto_accept(query.from_user.id):
-
-                    return await query.message.edit(text=text, reply_markup=InlineKeyboardMarkup([[OnWelcBtn, OffLeavBtn], [OnAutoacceptBtn]]))
-
-                return await query.message.edit(text=text, reply_markup=InlineKeyboardMarkup([[OnWelcBtn, OffLeavBtn], [OffAutoacceptBtn]]))
-
-    elif data.startswith('leav'):
-        text = "Click the button from below to toggle Welcome & Leaving Message also Auto Accept."
-        boolean = data.split('-')[1]
-
-        if boolean == 'on':
-            await db.set_bool_leav(query.from_user.id, False)
-            if await db.get_bool_welc(query.from_user.id):
-                if await db.get_bool_auto_accept(query.from_user.id):
-                    return await query.message.edit(text=text, reply_markup=InlineKeyboardMarkup([[OnWelcBtn, OffLeavBtn], [OnAutoacceptBtn]]))
-
-                return await query.message.edit(text=text, reply_markup=InlineKeyboardMarkup([[OnWelcBtn, OffLeavBtn], [OffAutoacceptBtn]]))
-
-            else:
-                if await db.get_bool_auto_accept(query.from_user.id):
-                    return await query.message.edit(text=text, reply_markup=InlineKeyboardMarkup([[OffWelcBtn, OffLeavBtn], [OnAutoacceptBtn]]))
-                return await query.message.edit(text=text, reply_markup=InlineKeyboardMarkup([[OffWelcBtn, OffLeavBtn], [OffAutoacceptBtn]]))
-
-        elif boolean == 'off':
-            await db.set_bool_leav(query.from_user.id, True)
-            if await db.get_bool_welc(query.from_user.id):
-                if await db.get_bool_auto_accept(query.from_user.id):
-                    return await query.message.edit(text=text, reply_markup=InlineKeyboardMarkup([[OnWelcBtn, OnLeavBtn], [OnAutoacceptBtn]]))
-                return await query.message.edit(text=text, reply_markup=InlineKeyboardMarkup([[OnWelcBtn, OnLeavBtn], [OffAutoacceptBtn]]))
-
-            else:
-                if await db.get_bool_auto_accept(query.from_user.id):
-                    return await query.message.edit(text=text, reply_markup=InlineKeyboardMarkup([[OffWelcBtn, OnLeavBtn], [OnAutoacceptBtn]]))
-                return await query.message.edit(text=text, reply_markup=InlineKeyboardMarkup([[OffWelcBtn, OnLeavBtn], [OnAutoacceptBtn], [OffAutoacceptBtn]]))
-
-    elif data.startswith('autoaccept'):
-        text = "Click the button from below to toggle Welcome & Leaving Message also Auto Accept."
-        boolean = data.split('-')[1]
-
-        if boolean == 'on':
-            await db.set_bool_auto_accept(query.from_user.id, False)
-            if await db.get_bool_welc(query.from_user.id) and await db.get_bool_leav(query.from_user.id):
-                return await query.message.edit(text=text, reply_markup=InlineKeyboardMarkup([[OnWelcBtn, OnLeavBtn], [OffAutoacceptBtn]]))
-
-            elif await db.get_bool_welc(query.from_user.id):
-                if await db.get_bool_leav(query.from_user.id):
-                    return await query.message.edit(text=text, reply_markup=InlineKeyboardMarkup([[OnWelcBtn, OnLeavBtn], [OffAutoacceptBtn]]))
-
-                return await query.message.edit(text=text, reply_markup=InlineKeyboardMarkup([[OnWelcBtn, OffLeavBtn], [OffAutoacceptBtn]]))
-
-            elif await db.get_bool_leav(query.from_user.id):
-                if await db.get_bool_welc(query.from_user.id):
-                    return await query.message.edit(text=text, reply_markup=InlineKeyboardMarkup([[OnWelcBtn, OnLeavBtn], [OffAutoacceptBtn]]))
-
-                return await query.message.edit(text=text, reply_markup=InlineKeyboardMarkup([[OffWelcBtn, OnLeavBtn], [OffAutoacceptBtn]]))
-
-            else:
-                return await query.message.edit(text=text, reply_markup=InlineKeyboardMarkup([[OffWelcBtn, OffLeavBtn], [OffAutoacceptBtn]]))
-        else:
-            await db.set_bool_auto_accept(query.from_user.id, True)
-            if await db.get_bool_welc(query.from_user.id) and await db.get_bool_leav(query.from_user.id):
-                return await query.message.edit(text=text, reply_markup=InlineKeyboardMarkup([[OnWelcBtn, OnLeavBtn], [OnAutoacceptBtn]]))
-
-            elif await db.get_bool_welc(query.from_user.id):
-                if await db.get_bool_leav(query.from_user.id):
-                    return await query.message.edit(text=text, reply_markup=InlineKeyboardMarkup([[OnWelcBtn, OnLeavBtn], [OnAutoacceptBtn]]))
-
-                return await query.message.edit(text=text, reply_markup=InlineKeyboardMarkup([[OnWelcBtn, OffLeavBtn], [OnAutoacceptBtn]]))
-
-            elif await db.get_bool_leav(query.from_user.id):
-                if await db.get_bool_welc(query.from_user.id):
-                    return await query.message.edit(text=text, reply_markup=InlineKeyboardMarkup([[OnWelcBtn, OnLeavBtn], [OnAutoacceptBtn]]))
-
-                return await query.message.edit(text=text, reply_markup=InlineKeyboardMarkup([[OffWelcBtn, OnLeavBtn], [OnAutoacceptBtn]]))
-
-            else:
-                return await query.message.edit(text=text, reply_markup=InlineKeyboardMarkup([[OffWelcBtn, OffLeavBtn], [OnAutoacceptBtn]]))
-
-    elif data == 'help':
-        await query.message.edit(TxT.HELP_MSG, disable_web_page_preview=True, reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('✘ Close ✘', callback_data='close')]]))
-
-    elif data == 'close':
-        await query.message.delete()
-        await query.message.continue_propagation()
+    await message.reply_text("**User Bot Added Successfully ✅**", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('❮ Back', callback_data='userbot')]]))
