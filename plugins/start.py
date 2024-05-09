@@ -147,11 +147,14 @@ async def set_bool_welc(bot: Client, message: Message):
 
 @Client.on_message(filters.private & filters.command('add_userbot') & filters.user(Config.ADMIN))
 async def add_userbot(bot: Client, message: Message):
-    bot_exist = await db.is_user_bot_exist(message.from_user.id)
+    try:
+        bot_exist = await db.is_user_bot_exist(message.from_user.id)
 
-    if bot_exist:
-        return await message.reply_text('**⚠️ User Bot Already Exists**', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('User Bot', callback_data='userbot')]]))
-
+        if bot_exist:
+            return await message.reply_text('**⚠️ User Bot Already Exists**', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('User Bot', callback_data='userbot')]]))
+    except:
+        pass
+    
     user_id = int(message.from_user.id)
 
     text = "<b>⚠️ DISCLAIMER ⚠️</b>\n\n<code>you can use your session for forward message from private chat to another chat.\nPlease add your pyrogram session with your own risk. Their is a chance to ban your account. My developer is not responsible if your account may get banned.</code>"
