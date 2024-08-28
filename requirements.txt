@@ -1,8 +1,7 @@
 aiohttp
 dnspython
 motor
-Pyrogram
+pyrofork
 TgCrypto
 pyproject-toml
 pytz
-pyromod

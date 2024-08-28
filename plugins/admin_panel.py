@@ -1,14 +1,27 @@
 from config import Config
 from helper.database import db
-from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
+from pyrogram.types import (
+    Message,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    CallbackQuery,
+    ChatPrivileges,
+)
 from pyrogram import Client, filters
-from pyrogram.errors import FloodWait, InputUserDeactivated, UserIsBlocked, PeerIdInvalid
+from pyrogram.errors import (
+    FloodWait,
+    InputUserDeactivated,
+    UserIsBlocked,
+    PeerIdInvalid,
+)
 import os
 import sys
 import time
 import asyncio
 import logging
 import datetime
+
+from plugins.session import generate_session
 from .start import client, start_clone_bot
 
 logger = logging.getLogger(__name__)
@@ -21,27 +34,36 @@ logger.setLevel(logging.INFO)
 @Client.on_message(filters.command(["stats", "status"]) & filters.user(Config.ADMIN))
 async def get_stats(bot, message):
     total_users = await db.total_users_count()
-    uptime = time.strftime("%Hh%Mm%Ss", time.gmtime(
-        time.time() - Config.BOT_UPTIME))
+    uptime = time.strftime("%Hh%Mm%Ss", time.gmtime(time.time() - Config.BOT_UPTIME))
     start_t = time.time()
-    st = await message.reply('**Aᴄᴄᴇꜱꜱɪɴɢ Tʜᴇ Dᴇᴛᴀɪʟꜱ.....**')
+    st = await message.reply("**Aᴄᴄᴇꜱꜱɪɴɢ Tʜᴇ Dᴇᴛᴀɪʟꜱ.....**")
     end_t = time.time()
     time_taken_s = (end_t - start_t) * 1000
-    await st.edit(text=f"**--Bᴏᴛ Sᴛᴀᴛᴜꜱ--** \n\n**⌚️ Bᴏᴛ Uᴩᴛɪᴍᴇ:** {uptime} \n**🐌 Cᴜʀʀᴇɴᴛ Pɪɴɢ:** `{time_taken_s:.3f} ᴍꜱ` \n**👭 Tᴏᴛᴀʟ Uꜱᴇʀꜱ:** `{total_users}`")
+    await st.edit(
+        text=f"**--Bᴏᴛ Sᴛᴀᴛᴜꜱ--** \n\n**⌚️ Bᴏᴛ Uᴩᴛɪᴍᴇ:** {uptime} \n**🐌 Cᴜʀʀᴇɴᴛ Pɪɴɢ:** `{time_taken_s:.3f} ᴍꜱ` \n**👭 Tᴏᴛᴀʟ Uꜱᴇʀꜱ:** `{total_users}`"
+    )
 
 
 # Restart to cancell all process
-@Client.on_message(filters.private & filters.command("restart") & filters.user(Config.ADMIN))
+@Client.on_message(
+    filters.private & filters.command("restart") & filters.user(Config.ADMIN)
+)
 async def restart_bot(b, m):
     await m.reply_text("🔄__Rᴇꜱᴛᴀʀᴛɪɴɢ.....__")
     os.execl(sys.executable, sys.executable, *sys.argv)
 
+
 # ⚠️ Broadcasting only those people who has started your bot
 
 
-@Client.on_message(filters.command("broadcast") & filters.user(Config.ADMIN) & filters.reply)
+@Client.on_message(
+    filters.command("broadcast") & filters.user(Config.ADMIN) & filters.reply
+)
 async def broadcast_handler(bot: Client, m: Message):
-    await bot.send_message(Config.LOG_CHANNEL, f"{m.from_user.mention} or {m.from_user.id} Iꜱ ꜱᴛᴀʀᴛᴇᴅ ᴛʜᴇ Bʀᴏᴀᴅᴄᴀꜱᴛ......")
+    await bot.send_message(
+        Config.LOG_CHANNEL,
+        f"{m.from_user.mention} or {m.from_user.id} Iꜱ ꜱᴛᴀʀᴛᴇᴅ ᴛʜᴇ Bʀᴏᴀᴅᴄᴀꜱᴛ......",
+    )
     all_users = await db.get_all_users()
     broadcast_msg = m.reply_to_message
     sts_msg = await m.reply_text("Bʀᴏᴀᴅᴄᴀꜱᴛ Sᴛᴀʀᴛᴇᴅ..!")
@@ -51,18 +73,22 @@ async def broadcast_handler(bot: Client, m: Message):
     start_time = time.time()
     total_users = await db.total_users_count()
     async for user in all_users:
-        sts = await send_msg(user['id'], broadcast_msg)
+        sts = await send_msg(user["id"], broadcast_msg)
         if sts == 200:
             success += 1
         else:
             failed += 1
         if sts == 400:
-            await db.delete_user(user['id'])
+            await db.delete_user(user["id"])
         done += 1
         if not done % 20:
-            await sts_msg.edit(f"Bʀᴏᴀᴅᴄᴀꜱᴛ Iɴ Pʀᴏɢʀᴇꜱꜱ: \nTᴏᴛᴀʟ Uꜱᴇʀꜱ {total_users} \nCᴏᴍᴩʟᴇᴛᴇᴅ: {done} / {total_users}\nSᴜᴄᴄᴇꜱꜱ: {success}\nFᴀɪʟᴇᴅ: {failed}")
+            await sts_msg.edit(
+                f"Bʀᴏᴀᴅᴄᴀꜱᴛ Iɴ Pʀᴏɢʀᴇꜱꜱ: \nTᴏᴛᴀʟ Uꜱᴇʀꜱ {total_users} \nCᴏᴍᴩʟᴇᴛᴇᴅ: {done} / {total_users}\nSᴜᴄᴄᴇꜱꜱ: {success}\nFᴀɪʟᴇᴅ: {failed}"
+            )
     completed_in = datetime.timedelta(seconds=int(time.time() - start_time))
-    await sts_msg.edit(f"Bʀᴏᴀᴅᴄᴀꜱᴛ Cᴏᴍᴩʟᴇᴛᴇᴅ: \nCᴏᴍᴩʟᴇᴛᴇᴅ Iɴ `{completed_in}`.\n\nTᴏᴛᴀʟ Uꜱᴇʀꜱ {total_users}\nCᴏᴍᴩʟᴇᴛᴇᴅ: {done} / {total_users}\nSᴜᴄᴄᴇꜱꜱ: {success}\nFᴀɪʟᴇᴅ: {failed}")
+    await sts_msg.edit(
+        f"Bʀᴏᴀᴅᴄᴀꜱᴛ Cᴏᴍᴩʟᴇᴛᴇᴅ: \nCᴏᴍᴩʟᴇᴛᴇᴅ Iɴ `{completed_in}`.\n\nTᴏᴛᴀʟ Uꜱᴇʀꜱ {total_users}\nCᴏᴍᴩʟᴇᴛᴇᴅ: {done} / {total_users}\nSᴜᴄᴄᴇꜱꜱ: {success}\nFᴀɪʟᴇᴅ: {failed}"
+    )
 
 
 async def send_msg(user_id, message):
@@ -86,98 +112,151 @@ async def send_msg(user_id, message):
         return 500
 
 
-@Client.on_message(filters.private & filters.command('acceptall') & filters.user(Config.ADMIN))
-async def handle_acceptall(bot: Client, message: Message):
-    ms = await message.reply_text("**Please Wait...**", reply_to_message_id=message.id)
-    chat_ids = await db.get_channel(Config.ADMIN)
+@Client.on_message(
+    filters.private & filters.command("add_userbot") & filters.user(Config.ADMIN)
+)
+async def add_userbot(bot: Client, message: Message):
+    try:
+        bot_exist = await db.is_user_bot_exist(message.from_user.id)
 
-    if len(list(chat_ids)) == 0:
-        return await ms.edit("**I'm not admin in any Channel or Group yet !**")
+        if bot_exist:
+            return await message.reply_text(
+                "**⚠️ User Bot Already Exists**",
+                reply_markup=InlineKeyboardMarkup(
+                    [[InlineKeyboardButton("User Bot", callback_data="userbot")]]
+                ),
+            )
+    except:
+        pass
 
-    button = []
-    for id in chat_ids:
-        info = await bot.get_chat(int(id))
-        button.append([InlineKeyboardButton(
-            f"{info.title} {str(info.type).split('.')[1]}", callback_data=f'acceptallchat_{id}')])
+    user_id = int(message.from_user.id)
 
-    await ms.edit("Select Channel or Group Bellow Where you want to accept pending request\n\nBelow Channels or Group I'm Admin there", reply_markup=InlineKeyboardMarkup(button))
+    text = "<b>⚠️ DISCLAIMER ⚠️</b>\n\n<code>\nPlease add your pyrogram session with your own risk. Their is a chance to ban your account. My developer is not responsible if your account may get banned.</code>\n\n /cancel ** to cancel the process **"
+    await bot.send_message(user_id, text=text)
+    session = await generate_session(bot, message)
+    try:
+        user_account = await start_clone_bot(client(session))
+    except Exception as e:
+        await message.reply_text(f"<b>USER BOT ERROR:</b> `{e}`")
+        print(
+            "Error on line {}".format(sys.exc_info()[-1].tb_lineno), type(e).__name__, e
+        )
+        return
+
+    user = user_account.me
+
+    details = {
+        "id": user.id,
+        "is_bot": False,
+        "user_id": user_id,
+        "name": user.first_name,
+        "session": session,
+        "username": user.username,
+    }
+    await db.add_user_bot(details)
+
+    await message.reply_text(
+        "**User Bot Added Successfully ✅**",
+        reply_markup=InlineKeyboardMarkup(
+            [[InlineKeyboardButton("❮ Back", callback_data="userbot")]]
+        ),
+    )
 
 
-@Client.on_message(filters.private & filters.command('declineall') & filters.user(Config.ADMIN))
-async def handle_declineall(bot: Client, message: Message):
-    ms = await message.reply_text("**Please Wait...**", reply_to_message_id=message.id)
-    chat_ids = await db.get_channel(Config.ADMIN)
-
-    if len(list(chat_ids)) == 0:
-        return await ms.edit("**I'm not admin in any Channel or Group yet !**")
-
-    button = []
-    for id in chat_ids:
-        info = await bot.get_chat(int(id))
-        button.append([InlineKeyboardButton(
-            f"{info.title} {str(info.type).split('.')[1]}", callback_data=f'declineallchat_{id}')])
-
-    await ms.edit("Select Channel or Group Bellow Where you want to accept pending request\n\nBelow Channels or Group I'm Admin there", reply_markup=InlineKeyboardMarkup(button))
-
-
-@Client.on_callback_query(filters.regex('^acceptallchat_'))
+@Client.on_callback_query(filters.regex("^acceptallchat_"))
 async def handle_accept_pending_request(bot: Client, update: CallbackQuery):
     # await update.message.delete()
-    chat_id = update.data.split('_')[1]
+    chat_id = int(update.data.split("_")[1])
     try:
         bot_exist = await db.is_user_bot_exist(update.from_user.id)
     except:
-        return await update.message.edit('**⚠️ You have not added user bot yet !\n\nUse /add_userbot to add it **')
+        return await update.message.edit(
+            "**⚠️ You have not added user bot yet !\n\nUse /add_userbot to add it **"
+        )
 
     if not bot_exist:
-        return await update.message.edit('**⚠️ You have not added user bot yet !\n\nUse /add_userbot to add it **')
+        return await update.message.edit(
+            "**⚠️ You have not added user bot yet !\n\nUse /add_userbot to add it **"
+        )
 
     user_bot = await db.get_user_bot(update.from_user.id)
-    user = await start_clone_bot(client(user_bot['session']))
+    user = await start_clone_bot(client(user_bot["session"]))
+    try:
+        link = await bot.export_chat_invite_link(chat_id=chat_id)
+        await user.join_chat(link)
+        await bot.promote_chat_member(
+            chat_id=chat_id,
+            user_id=user_bot["id"],
+            privileges=ChatPrivileges(
+                can_manage_chat=True,
+                can_post_messages=True,
+                can_change_info=True,
+                can_delete_messages=True,
+                can_edit_messages=True,
+                can_invite_users=True,
+            ),
+        )
+    except:
+        pass
 
     ms = await update.message.edit("**Please Wait Accepting the peding requests. ♻️**")
-    try:
-        while True:
-            try:
-                await user.approve_all_chat_join_requests(chat_id=int(chat_id))
-            except FloodWait as t:
-                asyncio.sleep(t.value)
-                await user.approve_all_chat_join_requests(chat_id=int(chat_id))
-            except Exception as e:
-                print('Error on line {}'.format(
-                    sys.exc_info()[-1].tb_lineno), type(e).__name__, e)
-                await update.message.reply_text(f"**Task Completed** ✓ **Approved ✅ All Pending Join Request**")
-                break
-    except:
-        await update.message.reply_text(f"**Task Completed** ✓ **Approved ✅ All Pending Join Request**")
+    
+    async for request in user.get_chat_join_requests(chat_id=chat_id):
+        await bot.approve_chat_join_request(chat_id=chat_id, user_id=request.user.id)
+    
+    await update.message.reply_text(
+        f"**Task Completed** ✓ **Approved ✅ All Pending Join Request**"
+    )
+    
     await ms.delete()
+    await user.stop()
 
 
-@Client.on_callback_query(filters.regex('^declineallchat_'))
+@Client.on_callback_query(filters.regex("^declineallchat_"))
 async def handle_delcine_pending_request(bot: Client, update: CallbackQuery):
     try:
         bot_exist = await db.is_user_bot_exist(update.from_user.id)
     except:
-        return await update.message.edit('**⚠️ You have not added user bot yet !\n\nUse /add_userbot to add it **')
+        return await update.message.edit(
+            "**⚠️ You have not added user bot yet !\n\nUse /add_userbot to add it **"
+        )
 
     if not bot_exist:
-        return await update.message.edit('**⚠️ You have not added user bot yet !\n\nUse /add_userbot to add it **')
+        return await update.message.edit(
+            "**⚠️ You have not added user bot yet !\n\nUse /add_userbot to add it **"
+        )
 
-    ms = await update.message.edit("**Please Wait Declining all the peding requests. ♻️**")
+    ms = await update.message.edit(
+        "**Please Wait Declining all the peding requests. ♻️**"
+    )
 
-    chat_id = update.data.split('_')[1]
+    chat_id = update.data.split("_")[1]
     user_bot = await db.get_user_bot(update.from_user.id)
-    user = await start_clone_bot(client(user_bot['session']))
+    user = await start_clone_bot(client(user_bot["session"]))
     try:
-        while True:
-            try:
-                await user.decline_all_chat_join_requests(chat_id=int(chat_id))
-            except FloodWait as t:
-                asyncio.sleep(t.value)
-                await user.decline_all_chat_join_requests(chat_id=int(chat_id))
-            except:
-                pass
-
+        link = await bot.export_chat_invite_link(chat_id=chat_id)
+        await user.join_chat(link)
+        await bot.promote_chat_member(
+            chat_id=chat_id,
+            user_id=user_bot["id"],
+            privileges=ChatPrivileges(
+                can_manage_chat=True,
+                can_post_messages=True,
+                can_change_info=True,
+                can_delete_messages=True,
+                can_edit_messages=True,
+                can_invite_users=True,
+            ),
+        )
     except:
-        await ms.delete()
-        await update.message.reply_text("**Task Completed** ✓ **Declined ❌ All The Pending Join Request**")
+        pass
+    
+    async for request in user.get_chat_join_requests(chat_id=chat_id):
+        await bot.decline_chat_join_request(chat_id=chat_id, user_id=request.user.id)
+    
+    await update.message.reply_text(
+        f"**Task Completed** ✓ **Declined ❌ All The Pending Join Request**"
+    )
+    
+    await ms.delete()
+    await user.stop()

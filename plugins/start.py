@@ -145,43 +145,36 @@ async def set_bool_welc(bot: Client, message: Message):
     await SnowDev.edit(text=text, reply_markup=reply_markup)
 
 
-@Client.on_message(filters.private & filters.command('add_userbot') & filters.user(Config.ADMIN))
-async def add_userbot(bot: Client, message: Message):
-    try:
-        bot_exist = await db.is_user_bot_exist(message.from_user.id)
+@Client.on_message(filters.private & filters.command('acceptall') & filters.user(Config.ADMIN))
+async def handle_acceptall(bot: Client, message: Message):
+    ms = await message.reply_text("**Please Wait...**", reply_to_message_id=message.id)
+    chat_ids = await db.get_channel(Config.ADMIN)
 
-        if bot_exist:
-            return await message.reply_text('**⚠️ User Bot Already Exists**', reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('User Bot', callback_data='userbot')]]))
-    except:
-        pass
-    
-    user_id = int(message.from_user.id)
+    if len(list(chat_ids)) == 0:
+        return await ms.edit("**I'm not admin in any Channel or Group yet !**")
 
-    text = "<b>⚠️ DISCLAIMER ⚠️</b>\n\n<code>\nPlease add your pyrogram session with your own risk. Their is a chance to ban your account. My developer is not responsible if your account may get banned.</code>"
-    await bot.send_message(user_id, text=text)
-    msg = await bot.ask(chat_id=user_id, text="<b>send your pyrogram session.\nget it from @SnowStringGenBot - /cancel the process</b>")
-    if msg.text == '/cancel':
-        return await msg.reply('<b>process cancelled !</b>')
-    elif len(msg.text) < SESSION_STRING_SIZE:
-        return await msg.reply('<b>invalid session sring</b>')
-    try:
-        user_account = await start_clone_bot(client(msg.text))
-    except Exception as e:
-        await msg.reply_text(f"<b>USER BOT ERROR:</b> `{e}`")
-        print('Error on line {}'.format(
-            sys.exc_info()[-1].tb_lineno), type(e).__name__, e)
+    button = []
+    for id in chat_ids:
+        info = await bot.get_chat(int(id))
+        button.append([InlineKeyboardButton(
+            f"{info.title} {str(info.type).split('.')[1]}", callback_data=f'acceptallchat_{id}')])
 
-    user = user_account.me
+    await ms.edit("Select Channel or Group Bellow Where you want to accept pending request\n\nBelow Channels or Group I'm Admin there", reply_markup=InlineKeyboardMarkup(button))
 
-    details = {
-        'id': user.id,
-        'is_bot': False,
-        'user_id': user_id,
-        'name': user.first_name,
-        'session': msg.text,
-        'username': user.username
-    }
 
-    await db.add_bot(details)
+@Client.on_message(filters.private & filters.command('declineall') & filters.user(Config.ADMIN))
+async def handle_declineall(bot: Client, message: Message):
+    ms = await message.reply_text("**Please Wait...**", reply_to_message_id=message.id)
+    chat_ids = await db.get_channel(Config.ADMIN)
 
-    await message.reply_text("**User Bot Added Successfully ✅**", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton('❮ Back', callback_data='userbot')]]))
+    if len(list(chat_ids)) == 0:
+        return await ms.edit("**I'm not admin in any Channel or Group yet !**")
+
+    button = []
+    for id in chat_ids:
+        info = await bot.get_chat(int(id))
+        button.append([InlineKeyboardButton(
+            f"{info.title} {str(info.type).split('.')[1]}", callback_data=f'declineallchat_{id}')])
+
+    await ms.edit("Select Channel or Group Bellow Where you want to accept pending request\n\nBelow Channels or Group I'm Admin there", reply_markup=InlineKeyboardMarkup(button))
+

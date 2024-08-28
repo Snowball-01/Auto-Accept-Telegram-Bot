@@ -13,7 +13,7 @@ class Config(object):
 
     # database config
     DB_URL = os.environ.get("DB_URL", "")  # ⚠️ Required
-    DB_NAME = os.environ.get("DB_NAME", "Cluster0")
+    DB_NAME = os.environ.get("DB_NAME", "SnowAcceptBot")
 
     # other configs
     BOT_UPTIME = time.time()

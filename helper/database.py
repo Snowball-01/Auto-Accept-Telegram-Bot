@@ -39,7 +39,7 @@ class Database:
             id=int(id)
         )
 
-    async def add_bot(self, bot_datas):
+    async def add_user_bot(self, bot_datas):
         if not await self.is_user_bot_exist(bot_datas['user_id']):
             await self.bot.insert_one(bot_datas)
 
