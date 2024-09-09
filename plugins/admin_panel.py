@@ -202,7 +202,7 @@ async def handle_accept_pending_request(bot: Client, update: CallbackQuery):
     ms = await update.message.edit("**Please Wait Accepting the peding requests. ♻️**")
     
     async for request in user.get_chat_join_requests(chat_id=chat_id):
-        await bot.approve_chat_join_request(chat_id=chat_id, user_id=request.user.id)
+        await user.approve_chat_join_request(chat_id=chat_id, user_id=request.user.id)
     
     await update.message.reply_text(
         f"**Task Completed** ✓ **Approved ✅ All Pending Join Request**"
@@ -252,7 +252,7 @@ async def handle_delcine_pending_request(bot: Client, update: CallbackQuery):
         pass
     
     async for request in user.get_chat_join_requests(chat_id=chat_id):
-        await bot.decline_chat_join_request(chat_id=chat_id, user_id=request.user.id)
+        await user.decline_chat_join_request(chat_id=chat_id, user_id=request.user.id)
     
     await update.message.reply_text(
         f"**Task Completed** ✓ **Declined ❌ All The Pending Join Request**"
