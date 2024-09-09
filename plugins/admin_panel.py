@@ -180,6 +180,7 @@ async def handle_accept_pending_request(bot: Client, update: CallbackQuery):
         )
 
     user_bot = await db.get_user_bot(update.from_user.id)
+    
     user = await start_clone_bot(client(user_bot["session"]))
     try:
         link = await bot.export_chat_invite_link(chat_id=chat_id)
@@ -203,6 +204,7 @@ async def handle_accept_pending_request(bot: Client, update: CallbackQuery):
 
     async for request in user.get_chat_join_requests(chat_id=chat_id):
         try:
+            print(request.user.id)
             await user.approve_chat_join_request(
                 chat_id=chat_id, user_id=request.user.id
             )
@@ -211,12 +213,14 @@ async def handle_accept_pending_request(bot: Client, update: CallbackQuery):
             await user.approve_chat_join_request(
                 chat_id=chat_id, user_id=request.user.id
             )
+        except Exception as e:
+            await update.message.reply_text(f"User ID : `{request.user.id}`\n\n Error: {e}")
 
+    await ms.delete()
     await update.message.reply_text(
         f"**Task Completed** ✓ **Approved ✅ All Pending Join Request**"
     )
 
-    await ms.delete()
     await user.stop()
 
 
@@ -269,10 +273,12 @@ async def handle_delcine_pending_request(bot: Client, update: CallbackQuery):
             await user.decline_chat_join_request(
                 chat_id=chat_id, user_id=request.user.id
             )
-
+        except Exception as e:
+            await update.message.reply_text(f"User ID : `{request.user.id}`\n\n Error: {e}")
+            
+    await ms.delete()
     await update.message.reply_text(
         f"**Task Completed** ✓ **Declined ❌ All The Pending Join Request**"
     )
 
-    await ms.delete()
     await user.stop()
