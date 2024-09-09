@@ -204,7 +204,6 @@ async def handle_accept_pending_request(bot: Client, update: CallbackQuery):
 
     async for request in user.get_chat_join_requests(chat_id=chat_id):
         try:
-            print(request.user.id)
             await user.approve_chat_join_request(
                 chat_id=chat_id, user_id=request.user.id
             )
