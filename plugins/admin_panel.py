@@ -200,14 +200,22 @@ async def handle_accept_pending_request(bot: Client, update: CallbackQuery):
         pass
 
     ms = await update.message.edit("**Please Wait Accepting the peding requests. ♻️**")
-    
+
     async for request in user.get_chat_join_requests(chat_id=chat_id):
-        await user.approve_chat_join_request(chat_id=chat_id, user_id=request.user.id)
-    
+        try:
+            await user.approve_chat_join_request(
+                chat_id=chat_id, user_id=request.user.id
+            )
+        except FloodWait as e:
+            await asyncio.sleep(e.value)
+            await user.approve_chat_join_request(
+                chat_id=chat_id, user_id=request.user.id
+            )
+
     await update.message.reply_text(
         f"**Task Completed** ✓ **Approved ✅ All Pending Join Request**"
     )
-    
+
     await ms.delete()
     await user.stop()
 
@@ -250,13 +258,21 @@ async def handle_delcine_pending_request(bot: Client, update: CallbackQuery):
         )
     except:
         pass
-    
+
     async for request in user.get_chat_join_requests(chat_id=chat_id):
-        await user.decline_chat_join_request(chat_id=chat_id, user_id=request.user.id)
-    
+        try:
+            await user.decline_chat_join_request(
+                chat_id=chat_id, user_id=request.user.id
+            )
+        except FloodWait as e:
+            await asyncio.sleep(e.value)
+            await user.decline_chat_join_request(
+                chat_id=chat_id, user_id=request.user.id
+            )
+
     await update.message.reply_text(
         f"**Task Completed** ✓ **Declined ❌ All The Pending Join Request**"
     )
-    
+
     await ms.delete()
     await user.stop()
