@@ -213,9 +213,6 @@ async def handle_accept_pending_request(bot: Client, update: CallbackQuery):
                 chat_id=chat_id, user_id=request.user.id
             )
         except Exception as e:
-            await update.message.reply_text(
-                f"User ID : `{request.user.id}`\n\n Error: {e}"
-            )
             try:
                 await user.decline_chat_join_request(
                     chat_id=chat_id, user_id=request.user.id
@@ -280,10 +277,7 @@ async def handle_delcine_pending_request(bot: Client, update: CallbackQuery):
             await user.decline_chat_join_request(
                 chat_id=chat_id, user_id=request.user.id
             )
-        except Exception as e:
-            await update.message.reply_text(
-                f"User ID : `{request.user.id}`\n\n Error: {e}"
-            )
+        except:pass
 
     await ms.delete()
     await update.message.reply_text(
