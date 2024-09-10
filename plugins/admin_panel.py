@@ -1,4 +1,4 @@
-from config import Config
+from config import Config, temp
 from helper.database import db
 from pyrogram.types import (
     Message,
@@ -167,6 +167,15 @@ async def add_userbot(bot: Client, message: Message):
 async def handle_accept_pending_request(bot: Client, update: CallbackQuery):
     # await update.message.delete()
     chat_id = int(update.data.split("_")[1])
+    user_id = update.from_user.id
+
+    if user_id in temp.PENDING_REQUESTS:
+        return await update.message.edit(
+            "**Please Wait...**\n\n**Until Previous Work Is Completed.**"
+        )
+
+    temp.PENDING_REQUESTS.append(user_id)
+
     try:
         bot_exist = await db.is_user_bot_exist(update.from_user.id)
     except:
@@ -214,22 +223,37 @@ async def handle_accept_pending_request(bot: Client, update: CallbackQuery):
             )
         except Exception as e:
             try:
-                await user.decline_chat_join_request(
+                await user.approve_chat_join_request(
                     chat_id=chat_id, user_id=request.user.id
                 )
             except:
                 pass
 
     await ms.delete()
+    try:
+        chnlInfo = await bot.get_chat(int(chat_id))
+    except:
+        pass
     await update.message.reply_text(
-        f"**Task Completed** ✓ **Approved ✅ All Pending Join Request**"
+        f"**Task Completed** ✓ **Approved ✅ All Pending Join Requests from `{chnlInfo.title if chnlInfo else chat_id}`**"
     )
 
+    temp.PENDING_REQUESTS.remove(user_id)
     await user.stop()
 
 
 @Client.on_callback_query(filters.regex("^declineallchat_"))
 async def handle_delcine_pending_request(bot: Client, update: CallbackQuery):
+
+    user_id = update.from_user.id
+
+    if user_id in temp.PENDING_REQUESTS:
+        return await update.message.edit(
+            "**Please Wait...**\n\n**Until Previous Work Is Completed.**"
+        )
+
+    temp.PENDING_REQUESTS.append(user_id)
+
     try:
         bot_exist = await db.is_user_bot_exist(update.from_user.id)
     except:
@@ -277,11 +301,17 @@ async def handle_delcine_pending_request(bot: Client, update: CallbackQuery):
             await user.decline_chat_join_request(
                 chat_id=chat_id, user_id=request.user.id
             )
-        except:pass
+        except:
+            pass
 
     await ms.delete()
+    try:
+        chnlInfo = await bot.get_chat(int(chat_id))
+    except:
+        pass
     await update.message.reply_text(
-        f"**Task Completed** ✓ **Declined ❌ All The Pending Join Request**"
+        f"**Task Completed** ✓ **Declined ❌ All The Pending Join Requests from `{chnlInfo.title if chnlInfo else chat_id}`**"
     )
 
+    temp.PENDING_REQUESTS.remove(user_id)
     await user.stop()
