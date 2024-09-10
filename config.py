@@ -49,3 +49,6 @@ class TxT(object):
 
 <b>⦿ Developer:</b> <a href=https://t.me/Snowball_Official>ѕησωвαℓℓ ❄️</a>
 """
+
+class temp(object):
+    PENDING_REQUESTS = []
